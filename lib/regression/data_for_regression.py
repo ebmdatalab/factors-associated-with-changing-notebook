@@ -1,7 +1,9 @@
+import os
 import pandas as pd
 from ebmdatalab import bq
 import fingertips_py as ft
 
+py_file_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
 
 phe_indicators = [
 'Deprivation score (IMD 2015)',
@@ -44,10 +46,15 @@ def qof():
 	Found here:
 	https://digital.nhs.uk/data-and-information/publications/statistical/quality-and-outcomes-framework-achievement-prevalence-and-exceptions-data/2018-19-pas
 	"""
-	df = pd.read_csv('data/ACHIEVEMENT_1819.csv')
-	qof_map = pd.read_csv('data/INDICATOR_MAPPINGS_1819_v2.csv')
-	df = df.merge(qof_map[['INDICATOR_CODE','DOMAIN_CODE']], how='inner', on='INDICATOR_CODE', copy=False)
-	df = df.loc[df['MEASURE'] == 'ACHIEVED_POINTS'].groupby(['PRACTICE_CODE','DOMAIN_CODE']).sum()
+	df = pd.read_csv(f'{py_file_dir}/ACHIEVEMENT_1819.csv')
+	qof_map = pd.read_csv(f'{py_file_dir}/INDICATOR_MAPPINGS_1819_v2.csv')
+	df = df.merge(qof_map[['INDICATOR_CODE','DOMAIN_CODE']],
+		how='inner',
+		on='INDICATOR_CODE',
+		copy=False)
+	df = df.loc[df['MEASURE'] == 'ACHIEVED_POINTS'].groupby([
+		'PRACTICE_CODE',
+		'DOMAIN_CODE']).sum()
 	df = df.unstack(level=1) #.reset_index(col_level=0)
 	df.columns = df.columns.droplevel(0)
 	df['QOF_TOTAL'] = df['CL'] + df['PH'] + df['PHAS']
@@ -61,7 +68,7 @@ def gps_per_practice():
 	https://digital.nhs.uk/data-and-information/publications/statistical/general-and-personal-medical-services/final-30-september-2019
 	https://digital.nhs.uk/data-and-information/publications/statistical/general-and-personal-medical-services
 	"""
-	df = pd.read_csv('data/General Practice September 2019 Practice Level.csv')
+	df = pd.read_csv(f'{py_file_dir}/General Practice September 2019 Practice Level.csv')
 	return df[['PRAC_CODE','TOTAL_GP_HC']].set_index('PRAC_CODE')
 
 
@@ -82,7 +89,7 @@ def practice_data():
 	ORDER BY
 	  practice
 	'''
-	df = bq.cached_read(q, csv_path='data/cached_practice.csv')
+	df = bq.cached_read(q, csv_path=f'{py_file_dir}/cached_practice.csv')
 	return df.set_index('practice')
 
 def dispensing():
@@ -95,7 +102,7 @@ def dispensing():
 	ORDER BY
 	  code ASC
 	'''
-	df = bq.cached_read(q, csv_path='data/cached_dispensing.csv')
+	df = bq.cached_read(q, csv_path=f'{py_file_dir}/cached_dispensing.csv')
 	return df.set_index('code')
 
 def prescribing_volume(year=2018):
@@ -111,7 +118,7 @@ def prescribing_volume(year=2018):
 	GROUP BY
 	  practice
 	'''
-	df =  bq.cached_read(q, csv_path='data/cached_prescribing_volume.csv')
+	df =  bq.cached_read(q, csv_path=f'{py_file_dir}/cached_prescribing_volume.csv')
 	return df.set_index('practice')
 
 
@@ -130,7 +137,7 @@ def urban_rural():
 	ON
 	  pcds = postcode
 	'''
-	df = bq.cached_read(q, csv_path='data/cached_urban_rural.csv')
+	df = bq.cached_read(q, csv_path=f'{py_file_dir}/cached_urban_rural.csv')
 	return df.set_index('practice')
 
 def list_size(year=2018):
@@ -148,5 +155,5 @@ def list_size(year=2018):
 	ORDER BY
 	  practice
 	'''
-	df = bq.cached_read(q, csv_path='data/cached_list_size.csv')
+	df = bq.cached_read(q, csv_path=f'{py_file_dir}/cached_list_size.csv')
 	return df.set_index('practice')

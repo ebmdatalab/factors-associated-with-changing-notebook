@@ -14,16 +14,11 @@
 #     name: python3
 # ---
 
-# +
 # NBVAL_IGNORE_OUTPUT
 # ^this is a magic comment to work around this issue https://github.com/ebmdatalab/custom-docker/issues/10
 import pandas as pd
 from change_detection import functions as chg
-from lib.custom_functions import *
-
-# %load_ext autoreload
-# %autoreload 2
-# -
+from lib.regression import rd
 
 change = chg.ChangeDetection('practice_data%',
                                     measure=True,
@@ -49,3 +44,6 @@ changes_nat
 
 difference = changes - changes_nat
 difference
+
+reg_data = rd.get_data()
+reg_data.head()

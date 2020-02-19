@@ -43,7 +43,22 @@ changes_nat = changes_nat.reset_index(level=1)
 changes_nat
 
 difference = changes - changes_nat
-difference
+difference.head()
 
 reg_data = rd.get_data()
 reg_data.head()
+
+biggest_change = difference[['is.tfirst.big']].groupby(level=1).sum()
+data_for_stata = biggest_change.join(reg_data,how='left')
+data_for_stata.to_csv('../lib/regression/data/data_for_stata.csv')
+data_for_stata.head()
+
+biggest_change.hist()
+
+difference.loc['practice_data_desogestrel','is.tfirst.big'].hist()
+
+difference.loc['practice_data_trimethoprim','is.tfirst.big'].hist()
+
+difference.loc['practice_data_trimethoprim','is.slope.ma.prop'].describe()
+
+difference.loc['practice_data_trimethoprim','is.intlev.levdprop'].describe()

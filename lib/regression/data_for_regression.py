@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 from ebmdatalab import bq
 import fingertips_py as ft
 
@@ -60,7 +61,7 @@ def qof():
 	df['QOF_TOTAL'] = df['CL'] + df['PH'] + df['PHAS']
 	return df
 
-def gps_per_practice():
+def gp_workforce():
 	"""
 	Data from:
 	https://files.digital.nhs.uk/A2/457C00/GPWPracticeCSV.0919.zip
@@ -68,8 +69,22 @@ def gps_per_practice():
 	https://digital.nhs.uk/data-and-information/publications/statistical/general-and-personal-medical-services/final-30-september-2019
 	https://digital.nhs.uk/data-and-information/publications/statistical/general-and-personal-medical-services
 	"""
-	df = pd.read_csv(f'{py_file_dir}/General Practice September 2019 Practice Level.csv')
-	return df[['PRAC_CODE','TOTAL_GP_HC']].set_index('PRAC_CODE')
+	cols = [
+		'PRAC_CODE',
+		'TOTAL_GP_HC',
+		'TOTAL_DISP_PATIENTS',
+		'TOTAL_GP_FTE',
+		'TOTAL_PATIENTS'
+		]
+	df = pd.read_csv(f'{py_file_dir}/General Practice September 2019 Practice Level.csv',
+		usecols=cols,
+		na_values=['ND'],
+		index_col='PRAC_CODE')
+	df['SINGLE_HANDED'] = (df['TOTAL_GP_HC'] ==1)*1
+	df['DISPENSING_BIN'] = (df['TOTAL_DISP_PATIENTS'] ==1)*1
+	df['GP_FTE_PER_10000'] = df['TOTAL_GP_FTE'] / (df['TOTAL_PATIENTS']/10000)
+	df = df.replace([np.inf, -np.inf], np.nan)
+	return df
 
 
 ###### Data from BigQuery ######
@@ -91,19 +106,6 @@ def practice_data():
 	'''
 	df = bq.cached_read(q, csv_path=f'{py_file_dir}/cached_practice.csv')
 	return df.set_index('practice')
-
-def dispensing():
-	q = '''
-	SELECT
-	  code,
-	  dispensing_patients
-	FROM
-	  ebmdatalab.bsa.dispensing_practices_jan2017
-	ORDER BY
-	  code ASC
-	'''
-	df = bq.cached_read(q, csv_path=f'{py_file_dir}/cached_dispensing.csv')
-	return df.set_index('code')
 
 def prescribing_volume(year=2018):
 	q = f'''
@@ -157,3 +159,18 @@ def list_size(year=2018):
 	'''
 	df = bq.cached_read(q, csv_path=f'{py_file_dir}/cached_list_size.csv')
 	return df.set_index('practice')
+
+def software_vendor(date='2019-08-01'):
+	q = f'''
+	SELECT
+	  ODS,
+	  Principal_Supplier
+	FROM
+	  ebmdatalab.alex.vendors
+	WHERE
+	  Date >= TIMESTAMP("{date}")
+	ORDER BY
+	  ODS
+	'''
+	df = bq.cached_read(q, csv_path=f'{py_file_dir}/cached_list_size.csv')
+	return df.set_index('ODS')

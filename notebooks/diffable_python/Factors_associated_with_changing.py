@@ -19,18 +19,33 @@
 import pandas as pd
 from change_detection import functions as chg
 from lib.regression import rd
+from lib.generate_measure_sql import *
 
-change = chg.ChangeDetection('practice_data%',
-                                    measure=True,
-                                    direction='down',
-                                    use_cache=True,
-                                    overwrite=False,
-                                    verbose=False,
-                                    draw_figures='no',
-                                    measure_folder='alex')
+# %load_ext autoreload
+# %autoreload 2
+
+# +
+## When not using cached data, this needs to be run first time
+## after set up of docker environment (to authenticate BigQuery)
+#from ebmdatalab import bq
+#bq.cached_read('nothing',csv_path='nothing')
+# -
+
+measures = ['desogestrel','trimethoprim']
+run_name = 'first_go'
+get_measure_json(measures, run_name)
+build_sql(run_name)
+
+change = chg.ChangeDetection(
+    name=run_name,
+    measure=True,
+    custom_measure=True,
+    direction='down',
+    use_cache=True,
+    overwrite=False,
+    verbose=False,
+    draw_figures='no')
 change.run()
-
-change.get_measure_list()
 
 changes = change.concatenate_outputs()
 changes.head()
@@ -55,10 +70,10 @@ data_for_stata.head()
 
 biggest_change.hist()
 
-difference.loc['practice_data_desogestrel','is.tfirst.big'].hist()
+difference.loc['desogestrel','is.tfirst.big'].hist()
 
-difference.loc['practice_data_trimethoprim','is.tfirst.big'].hist()
+difference.loc['trimethoprim','is.tfirst.big'].hist()
 
-difference.loc['practice_data_trimethoprim','is.slope.ma.prop'].describe()
+difference.loc['trimethoprim','is.slope.ma.prop'].describe()
 
-difference.loc['practice_data_trimethoprim','is.intlev.levdprop'].describe()
+difference.loc['trimethoprim','is.intlev.levdprop'].describe()

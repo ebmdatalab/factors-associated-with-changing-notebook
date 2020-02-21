@@ -1,4 +1,4 @@
-# EBM DataLab's skeleton notebook environment
+# Factors associated with changing
 
 ![status](https://github.com/ebmdatalab/custom-docker/workflows/Notebook%20checks/badge.svg)
 

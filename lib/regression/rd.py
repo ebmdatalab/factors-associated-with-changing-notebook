@@ -4,6 +4,13 @@ from lib.regression import data_for_regression as dfr
 
 
 def get_data():
+    """Runs all functions in data_for_regression.py
+    Each of these functions returns a df with entity code as the index.
+    All dfs are joined and the resulting df is cached.
+    
+    Returns:
+        pandas DataFrame: Containing all regression variables
+    """
     cache_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "data", "cached_all_data.csv"
     )

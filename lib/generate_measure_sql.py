@@ -1,39 +1,41 @@
 import json
 import os
 import requests
-from jsondiff  import diff
+from jsondiff import diff
 
 
 def get_measure_json(measures, run_name):
-    output_dir = f'data/measure_json/{run_name}'
+    output_dir = f"data/measure_json/{run_name}"
     os.makedirs(output_dir, exist_ok=True)
     for measure in measures:
-        filename = os.path.join(output_dir, f'{measure}.json')
-        url = f'https://raw.githubusercontent.com/ebmdatalab/openprescribing/db97f60eb914f55e5914d2c7d17416e4bcc37630/openprescribing/measure_definitions/{measure}.json'
+        filename = os.path.join(output_dir, f"{measure}.json")
+        url = f"https://raw.githubusercontent.com/ebmdatalab/openprescribing/db97f60eb914f55e5914d2c7d17416e4bcc37630/openprescribing/measure_definitions/{measure}.json"
         r = requests.get(url)
-        with open(filename, 'wb') as f:
+        with open(filename, "wb") as f:
             f.write(r.content)
 
+
 changes = {
-    'numerator_columns':{
-        'from':['SUM(actual_cost) AS numerator'],
-        'to':['SUM(items) AS numerator']
+    "numerator_columns": {
+        "from": ["SUM(actual_cost) AS numerator"],
+        "to": ["SUM(items) AS numerator"],
     }
 }
 
+
 def modify_measure_json(path):
     with open(path) as f:
-            measure_def = json.load(f)
-            measure_def_before = measure_def.copy()
+        measure_def = json.load(f)
+        measure_def_before = measure_def.copy()
     for c in changes:
         if c in measure_def:
-            if measure_def[c] == changes[c]['from']:
-                measure_def[c] = changes[c]['to']
-                print('Changes from OP definition:',
-                      diff(measure_def_before, measure_def)
+            if measure_def[c] == changes[c]["from"]:
+                measure_def[c] = changes[c]["to"]
+                print(
+                    "Changes from OP definition:", diff(measure_def_before, measure_def)
                 )
-    with open(path,'w') as f:
-        json.dump(measure_def,f)
+    with open(path, "w") as f:
+        json.dump(measure_def, f)
     return measure_def
 
 
@@ -93,14 +95,17 @@ def build_num_or_denom_fields(measure_def, num_or_denom):
         full_attr_name("where"): where,
     }
 
+
 def build_sql(run_name):
-    output_dir = f'data/measure_sql/{run_name}'
+    output_dir = f"data/measure_sql/{run_name}"
 
     os.makedirs(output_dir, exist_ok=True)
 
-    measure_def_paths = [entry.path for entry
-        in os.scandir(f'data/measure_json/{run_name}')
-        if entry.name.endswith('.json')]
+    measure_def_paths = [
+        entry.path
+        for entry in os.scandir(f"data/measure_json/{run_name}")
+        if entry.name.endswith(".json")
+    ]
 
     with open("data/template.sql") as f:
         template = f.read()
@@ -108,7 +113,7 @@ def build_sql(run_name):
     for path in measure_def_paths:
         measure_id = os.path.basename(path).split(".")[0]
         print(measure_id)
-        
+
         measure_def = modify_measure_json(path)
 
         context = {}

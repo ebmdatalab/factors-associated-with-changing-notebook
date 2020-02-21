@@ -32,6 +32,7 @@ from lib.regression import rd
 
 # # Define measures and build measure SQL
 
+# NBVAL_IGNORE_OUTPUT
 measures = ["desogestrel","trimethoprim"]
 run_name = "first_go"
 get_measure_json(measures, run_name)

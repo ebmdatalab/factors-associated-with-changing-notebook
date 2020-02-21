@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 import requests
 from jsondiff  import diff
 
@@ -94,26 +93,27 @@ def build_num_or_denom_fields(measure_def, num_or_denom):
         full_attr_name("where"): where,
     }
 
+def build_sql(run_name):
+    output_dir = f'data/measure_sql/{run_name}'
 
-output_dir = "measure_sql"
+    os.makedirs(output_dir, exist_ok=True)
 
-os.makedirs(output_dir, exist_ok=True)
+    measure_def_paths = [entry.path for entry
+        in os.scandir(f'data/measure_json/{run_name}')
+        if entry.name.endswith('.json')]
 
-measure_def_paths = sys.argv[1:]
+    with open("data/template.sql") as f:
+        template = f.read()
 
-with open("template.sql") as f:
-    template = f.read()
+    for path in measure_def_paths:
+        measure_id = os.path.basename(path).split(".")[0]
+        print(measure_id)
+        
+        measure_def = modify_measure_json(path)
 
-for path in measure_def_paths:
-    measure_id = os.path.basename(path).split(".")[0]
-    with open(path) as f:
-        measure_def = json.load(f)
+        context = {}
+        context.update(build_num_or_denom_fields(measure_def, "numerator"))
+        context.update(build_num_or_denom_fields(measure_def, "denominator"))
 
-    context = {}
-    context.update(build_num_or_denom_fields(measure_def, "numerator"))
-    context.update(build_num_or_denom_fields(measure_def, "denominator"))
-
-    print(measure_id)
-
-    with open(os.path.join(output_dir, measure_id + ".sql"), "w") as f:
-        f.write(template.format(**context))
+        with open(os.path.join(output_dir, measure_id + ".sql"), "w") as f:
+            f.write(template.format(**context))

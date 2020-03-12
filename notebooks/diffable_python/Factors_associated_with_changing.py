@@ -33,10 +33,10 @@ from lib.regression import rd
 # # Define measures and build measure SQL
 
 # NBVAL_IGNORE_OUTPUT
-measures = ["desogestrel","trimethoprim"]
-run_name = "first_go"
-get_measure_json(measures, run_name)
-build_sql(run_name)
+#measures = ["desogestrel","trimethoprim"]
+run_name = "custom_des_trim"
+#get_measure_json(measures, run_name)
+#build_sql(run_name)
 
 # # Run change detection on all measures
 
@@ -55,12 +55,9 @@ changes = change.concatenate_outputs()
 changes.head()
 
 # # Determine changes at national level for comparison
+# - 1st decile of practice level changes
 
-change.num_cores = 1
-change.national_changes()
-
-changes_nat = change.concatenate_outputs("_national")
-changes_nat = changes_nat.reset_index(level=1)
+changes_nat = changes.groupby('measure').quantile(0.1)
 changes_nat
 
 # # Compare practice level changes with national changes
@@ -77,19 +74,17 @@ reg_data.head()
 # - Stata code currently run separately
 # - Future: convert to use R
 
-biggest_change = difference[["is.tfirst.big"]].groupby(level=1).sum()
-data_for_stata = biggest_change.join(reg_data,how="left")
-data_for_stata.to_csv("../lib/regression/data/data_for_stata.csv")
-data_for_stata.head()
+# +
+measures = difference.index.get_level_values(0).unique()
+for m in measures:
+    reg_data[m] = difference.loc[m,"is.tfirst.big"]
+
+reg_data.to_csv("../lib/regression/data/data_for_stata.csv")
+reg_data.head()
+# -
 
 # # Explore outcomes
-
-biggest_change.hist()
 
 difference.loc["desogestrel","is.tfirst.big"].hist()
 
 difference.loc["trimethoprim","is.tfirst.big"].hist()
-
-difference.loc["trimethoprim","is.slope.ma.prop"].describe()
-
-difference.loc["trimethoprim","is.intlev.levdprop"].describe()

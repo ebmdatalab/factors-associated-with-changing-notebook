@@ -11,16 +11,23 @@ xtile long_term_health = withalongstandinghealthcondition,nq(5)
 encode ruc11cd, gen(rural_urban_code)
 encode principal_supplier, gen(ehr)
 
+tabstat aged65years,by(over_65) s(min max)
+tabstat withalongstandinghealthcondition,by(long_term_health) s(min max)
+tabstat list_size,by(list_size_q) s(min max)
+tabstat gp_fte_per_10000,by(fte) s(min max)
+tabstat deprivationscoreimd2015,by(imd) s(min max)
+*tabstat qof_total,by(qof) s(min max)
+
 foreach depvar in desogestrel trimethoprim {
 
-	foreach indepvar in single_handed dispensing_bin fte list_size_q imd ///
+	foreach indepvar in /*single_handed*/ dispensing_bin fte list_size_q imd ///
 			long_term_health over_65 rural_urban_code ehr {
 		tabstat `depvar',by(`indepvar') s(mean)
 		regress `depvar' i.`indepvar'
 	}
 
 	mixed `depvar' ///
-		  i.single_handed i.dispensing_bin i.fte i.list_size_q i.imd ///
+		  /*i.single_handed*/ i.dispensing_bin i.fte i.list_size_q i.imd ///
 		  i.long_term_health i.over_65 i.rural_urban_code i.ehr ///
 		  || pct:
 

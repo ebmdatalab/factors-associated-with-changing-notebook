@@ -90,7 +90,7 @@ def gp_workforce():
         index_col="PRAC_CODE",
     )
     df["SINGLE_HANDED"] = (df["TOTAL_GP_HC"] == 1) * 1
-    df["DISPENSING_BIN"] = (df["TOTAL_DISP_PATIENTS"] == 1) * 1
+    df["DISPENSING_BIN"] = (df["TOTAL_DISP_PATIENTS"] > 0) * 1
     df["GP_FTE_PER_10000"] = df["TOTAL_GP_FTE"] / (df["TOTAL_PATIENTS"] / 10000)
     df = df.replace([np.inf, -np.inf], np.nan)
     return df
